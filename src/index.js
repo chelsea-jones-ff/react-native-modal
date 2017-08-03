@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Dimensions, Modal, DeviceEventEmitter } from 'react-native';
+import { Dimensions, Modal, DeviceEventEmitter, KeyboardAvoidingView } from 'react-native';
 import PropTypes from 'prop-types';
 import { View, initializeRegistryWithDefinitions } from 'react-native-animatable';
 import * as ANIMATION_DEFINITIONS from './animations';
@@ -15,6 +15,7 @@ export class ReactNativeModal extends Component {
     animationInTiming: PropTypes.number,
     animationOut: PropTypes.string,
     animationOutTiming: PropTypes.number,
+    avoidKeyboard: PropTypes.bool,
     backdropColor: PropTypes.string,
     backdropOpacity: PropTypes.number,
     backdropTransitionInTiming: PropTypes.number,
@@ -33,6 +34,7 @@ export class ReactNativeModal extends Component {
     animationInTiming: 300,
     animationOut: 'slideOutDown',
     animationOutTiming: 300,
+    avoidKeyboard: false,
     backdropColor: 'black',
     backdropOpacity: 0.70,
     backdropTransitionInTiming: 300,
@@ -119,12 +121,25 @@ export class ReactNativeModal extends Component {
     this.props.onBackButtonPress();
   };
 
+  renderInnerView = ({ deviceWidth, otherProps, children, style }) => {
+    return (
+      <View
+        ref={ref => (this.contentRef = ref)}
+        style={[{ margin: deviceWidth * 0.05 }, styles.content, style]}
+        {...otherProps}
+      >
+      {children}
+      </View>
+    );
+  };
+
   render() {
     const {
       animationIn,
       animationInTiming,
       animationOut,
       animationOutTiming,
+      avoidKeyboard,
       backdropColor,
       backdropOpacity,
       backdropTransitionInTiming,
@@ -152,13 +167,11 @@ export class ReactNativeModal extends Component {
             { backgroundColor: backdropColor, width: deviceWidth, height: deviceHeight },
           ]}
         />
-        <View
-          ref={ref => (this.contentRef = ref)}
-          style={[{ margin: deviceWidth * 0.05 }, styles.content, style]}
-          {...otherProps}
-        >
-          {children}
-        </View>
+        {avoidKeyboard &&
+        <KeyboardAvoidingView behavior="padding" style={styles.content}>
+            {this.renderInnerView({ deviceWidth, otherProps, children, style })}
+          </KeyboardAvoidingView>}
+        {!avoidKeyboard && this.renderInnerView({ deviceWidth, otherProps, children, style })}
       </Modal>
     );
   }
